@@ -1,0 +1,73 @@
+# === GEE-ManMadeSurface-ML .gitignore ===
+
+# Git系统文件
+.git/
+.gitignore
+.gitattributes
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Data files - 处理后的数据文件（不纳入版本控制）
+processed_data/
+
+# Raw data - 原始数据文件（数据量较大）
+00_raw_data/
+
+# Data files
+*.csv
+*.geojson
+*.zip
+*.shp
+*.shx
+*.dbf
+*.prj
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Office/Document files
+*.xlsx
+*.xls
+*.docx
+*.doc
+*.ppt
+*.pptx
+*.pages
+*.numbers
+*.keynote
+
+# Notebook files
+*.ipynb
+.ipynb_checkpoints/
+
+# Logs
+*.log
+
+# Temporary/Cache files
+*.tmp
+*.temp
+*.cache
+.cache/
+.pytest_cache/
