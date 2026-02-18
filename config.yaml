@@ -1,0 +1,27 @@
+# 数据配置
+raw_data_path: "00_raw_data/global_wind_2020.csv"
+output_dir: "processed_data"
+
+# 模型配置
+n_estimators: 100
+test_size: 0.3
+random_state: 42
+
+# GEE配置
+gee_username: "wuxuanyue051213"
+cloud_threshold: 20
+
+# 区域配置
+regions:
+  north_china:
+    bbox: [110, 35, 120, 45]
+    time_range: ["2024-04-01", "2024-09-30"]
+  east_china:
+    bbox: [115, 25, 125, 35]
+    time_range: ["2024-01-01", "2024-09-30"]
+  southwest_china:
+    bbox: [95, 25, 110, 35]
+    time_range: ["2024-01-01", "2024-09-30"]
+  northwest_china:
+    bbox: [75, 35, 100, 45]
+    time_range: ["2024-04-01", "2024-09-30"]

@@ -6,10 +6,26 @@
 
 import pandas as pd
 import numpy as np
+from tqdm import tqdm
+import yaml
+import os
+
+def load_config():
+    """加载配置文件"""
+    if os.path.exists('config.yaml'):
+        with open('config.yaml', 'r', encoding='utf-8') as f:
+            return yaml.safe_load(f)
+    else:
+        # 默认配置
+        return {
+            'raw_data_path': '00_raw_data/global_wind_2020.csv',
+            'output_dir': 'processed_data'
+        }
 
 # ========== 第1步：读取数据 ==========
 print("正在读取全球风机数据...")
-df = pd.read_csv('00_raw_data/global_wind_2020.csv')
+config = load_config()
+df = pd.read_csv(config['raw_data_path'])
 
 print(f"读取完成！全球共有 {len(df)} 个风机记录")
 print("数据列名: {columns}".format(columns=df.columns.tolist()))
@@ -114,6 +130,8 @@ attempts = 0
 max_attempts = n_negative * 10  # 最多尝试10倍
 min_distance = 0.01  # 与正样本的最小距离（约1.1公里）
 
+# 使用 tqdm 显示进度
+pbar = tqdm(total=n_negative, desc="生成负样本")
 while len(negative_samples) < n_negative and attempts < max_attempts:
     attempts += 1
     
@@ -139,11 +157,13 @@ while len(negative_samples) < n_negative and attempts < max_attempts:
             'label': 'non_turbine'
         }
         negative_samples.append(sample)
+        pbar.update(1)
     
-    # 每1000次尝试显示一次进度
-    if attempts % 1000 == 0:
-        print(f"   进度: {len(negative_samples)}/{n_negative} (尝试{attempts}次)", end='\r')
+    # 防止无限循环
+    if attempts % 10000 == 0:
+        print(f"   尝试次数: {attempts}", end='\r')
 
+pbar.close()
 print(f"\n✅ 实际生成负样本数量: {len(negative_samples)}")
 print(f"   总共尝试了 {attempts} 次")
 
@@ -190,15 +210,14 @@ for region in regions:
 # ========== 第9步：保存结果 ==========
 print("\n💾 正在保存结果...")
 
-import os
-os.makedirs('processed_data', exist_ok=True)
+os.makedirs(config['output_dir'], exist_ok=True)
 
 # 保存各区域数据
 regions = ['north_china', 'east_china', 'southwest_china', 'northwest_china']
 for region in regions:
     region_df = all_df[all_df['region'] == region]
     if not region_df.empty:
-        region_df.to_csv(f'processed_data/{region}_samples.csv', index=False)
+        region_df.to_csv(f'{config["output_dir"]}/{region}_samples.csv', index=False)
         print(f"✅ {region} CSV已保存")
         
         # 保存为GeoJSON
@@ -214,7 +233,7 @@ for region in regions:
             
             # 创建GeoDataFrame
             region_gdf = gpd.GeoDataFrame(region_df, geometry=geometries, crs='EPSG:4326')
-            region_gdf.to_file(f'processed_data/{region}_samples.geojson', driver='GeoJSON')
+            region_gdf.to_file(f'{config["output_dir"]}/{region}_samples.geojson', driver='GeoJSON')
             print(f"✅ {region} GeoJSON已保存")
             
         except ImportError:
@@ -222,8 +241,8 @@ for region in regions:
             print("   如需GeoJSON，请运行: pip install geopandas shapely")
 
 # 也保存完整的数据集
-all_df.to_csv('processed_data/all_samples.csv', index=False)
-print("✅ 完整CSV已保存: processed_data/all_samples.csv")
+all_df.to_csv(f'{config["output_dir"]}/all_samples.csv', index=False)
+print(f"✅ 完整CSV已保存: {config['output_dir']}/all_samples.csv")
 
 # 保存完整的GeoJSON（用于GEE）
 try:
@@ -240,9 +259,9 @@ try:
     gdf = gpd.GeoDataFrame(all_df, geometry=geometries, crs='EPSG:4326')
     
     # 保存为GeoJSON
-    geojson_path = 'processed_data/all_samples.geojson'
+    geojson_path = f'{config["output_dir"]}/all_samples.geojson'
     gdf.to_file(geojson_path, driver='GeoJSON')
-    print("✅ 完整GeoJSON已保存: processed_data/all_samples.geojson")
+    print(f"✅ 完整GeoJSON已保存: {geojson_path}")
     
     # 分别保存正负样本
     positive_gdf = gdf[gdf['class'] == 1]
