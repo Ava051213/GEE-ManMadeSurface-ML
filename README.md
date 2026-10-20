@@ -1,62 +1,62 @@
-# 基于 GEE 与随机森林的风机识别
+# Wind Turbine Detection with GEE and Random Forest
 
-使用 Google Earth Engine（GEE）、Sentinel-1/2 遥感影像和随机森林，开展区域风机候选目标识别。项目实现了样本坐标处理、候选负样本生成、多源特征分类、精度评估与栅格导出流程。
+This project uses Google Earth Engine (GEE), Sentinel-1/2 imagery, and random forests to identify candidate wind turbine sites at regional scale. Its workflow covers sample-coordinate processing, candidate negative-sample generation, multisource feature classification, accuracy assessment, and raster export.
 
-## 项目流程
+## Workflow
 
 ```text
-原始位置数据
-    -> 坐标筛选和转换
-    -> 正样本及候选负样本
-    -> 上传 GEE Asset
-    -> Sentinel-1/2 特征与随机森林
-    -> 区域预测、阈值及连通像元筛选
-    -> 地图展示和栅格导出
+Source location data
+    -> Filter records and transform coordinates
+    -> Prepare positive and candidate negative samples
+    -> Upload tables to GEE Assets
+    -> Extract Sentinel-1/2 features and train a random forest
+    -> Predict the target region and filter by probability and connected pixels
+    -> Display results and export rasters
 ```
 
-| 模块 | 文件 | 用途 |
+| Component | File | Purpose |
 | --- | --- | --- |
-| GEE 分类和制图 | `code/wind_turbine_detection.js` | 加载特征表、训练分类器、验证、预测与导出 |
-| 正样本整理 | `code/extract_china_wind.py` | 筛选中国位置记录并转换为 WGS84 坐标 |
-| 负样本生成 | `code/generate_negative_samples.py` | 按区域生成候选点，并排除已知正样本的近邻区域 |
+| GEE classification and mapping | `code/wind_turbine_detection.js` | Load feature records, train and validate a classifier, predict, and export results |
+| Positive-sample preparation | `code/extract_china_wind.py` | Filter records for China and transform coordinates to WGS84 |
+| Negative-sample generation | `code/generate_negative_samples.py` | Generate regional candidate points outside neighborhoods of known positive samples |
 
-## 方法
+## Method
 
-分类输入由 Sentinel-2 光谱与指数、Sentinel-1 SAR、影像纹理及季节性 NDVI 组成，共设计25项特征。训练脚本按设定的随机比例拆分预计算特征记录，只对训练子集进行类别平衡；随后生成概率图，并可应用概率阈值和最小连通像元筛选。
+The classifier is designed around 25 features from Sentinel-2 spectral bands and indices, Sentinel-1 SAR, image texture, and seasonal NDVI. The training script randomly splits a precomputed feature table and balances classes in the training subset only. It then generates a probability map, with configurable probability and minimum connected-pixel filters.
 
-现有样本处理材料记录5,106条正样本位置记录和13,146条候选负样本位置记录。这些是数据表记录数，不等同于实际风机数量，也不表示所有记录都通过了独立标签核验。
+The existing sample-processing records contain 5,106 positive locations and 13,146 candidate negative locations. These are table-record counts, not counts of actual turbines, and do not imply that every record has been independently verified.
 
-## 验证结果
+## Validation Results
 
-实验记录中的混淆矩阵如下，行为参考类别、列为预测类别：
+The recorded confusion matrix is shown below. Rows are reference classes and columns are predictions.
 
-| 参考类别 / 预测类别 | 非风机 | 风机 |
+| Reference / predicted class | Non-turbine | Turbine |
 | --- | ---: | ---: |
-| 非风机 | 3,162 | 208 |
-| 风机 | 374 | 1,315 |
+| Non-turbine | 3,162 | 208 |
+| Turbine | 374 | 1,315 |
 
-| 验证指标 | 结果 |
+| Metric | Result |
 | --- | ---: |
-| 验证记录数 | 5,059 |
-| 总体精度 | 88.50% |
+| Validation records | 5,059 |
+| Overall accuracy | 88.50% |
 | Kappa | 0.7349 |
-| 风机精确率（Precision） | 86.34% |
-| 风机召回率（Recall） | 77.86% |
-| 风机 F1 | 81.88% |
+| Turbine precision | 86.34% |
+| Turbine recall | 77.86% |
+| Turbine F1 | 81.88% |
 
-这些指标描述该次留出验证集，不代表全国制图精度或空间独立验证结果。验证记录可能存在空间相关性；小目标漏检、候选负样本标签质量以及训练样本与影像时相差异仍需进一步检查。局部地图效果不能替代独立抽样精度评估。
+These metrics describe this held-out validation set. They do not establish national mapping accuracy or spatially independent validation. Spatial correlation may be present among validation records. Small-target omissions, candidate-negative label quality, and the temporal alignment between training locations and imagery require further investigation. Local map examples cannot replace an independently sampled accuracy assessment.
 
-## 运行
+## Run
 
-从项目根目录执行样本处理：
+From the repository root, prepare the sample tables with:
 
 ```powershell
 python code/extract_china_wind.py
 python code/generate_negative_samples.py
 ```
 
-将生成的样本表上传到自己的 Earth Engine 账号，并在 `code/wind_turbine_detection.js` 中设置 `positiveAsset`、`negativeAsset` 和 `trainingAsset`。随后将脚本载入 GEE Code Editor 运行。
+Upload the generated tables to your own Earth Engine account. Set `positiveAsset`, `negativeAsset`, and `trainingAsset` in `code/wind_turbine_detection.js`, then load the script in the GEE Code Editor.
 
-分类脚本还需要预计算训练特征表，至少包含脚本列出的25个特征字段和 `class` 标签。正负位置CSV不会自动生成该特征表。当前脚本默认配置用于指定区域演示；截图中的验证结果不能假定与当前脚本参数完全相同。
+The classification script also requires a precomputed feature table containing the 25 configured feature fields and a `class` label. The positive and negative location CSVs do not generate this feature table. The current script defaults are for a configured example region; do not assume the recorded validation metrics were produced with exactly the same settings.
 
-本地Python脚本依赖 `pandas`、`numpy`、`scipy` 和 `pyproj`。数据、申请及结题材料和实验截图保存在本地，不随公开代码仓库发布。
+The local Python scripts require `pandas`, `numpy`, `scipy`, and `pyproj`. Project documents, screenshots, and sample data are kept locally and are not published in this repository.
