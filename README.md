@@ -14,11 +14,9 @@ Source location data
     -> Display results and export rasters
 ```
 
-| Component | File | Purpose |
-| --- | --- | --- |
-| GEE classification and mapping | `code/wind_turbine_detection.js` | Load feature records, train and validate a classifier, predict, and export results |
-| Positive-sample preparation | `code/extract_china_wind.py` | Filter records for China and transform coordinates to WGS84 |
-| Negative-sample generation | `code/generate_negative_samples.py` | Generate regional candidate points outside neighborhoods of known positive samples |
+- **GEE classification and mapping** — `code/wind_turbine_detection.js`: trains, validates, and runs the classifier.
+- **Positive-sample preparation** — `code/extract_china_wind.py`: filters China records and transforms coordinates to WGS84.
+- **Negative-sample generation** — `code/generate_negative_samples.py`: generates regional candidates away from known positive samples.
 
 ## Method
 
