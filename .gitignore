@@ -1,0 +1,48 @@
+# Local data, project documents, and reference files may contain private or licensed material.
+data/
+docs/
+reference/
+
+# Data exports
+*.csv
+*.geojson
+*.zip
+*.shp
+*.shx
+*.dbf
+*.prj
+*.cpg
+
+# Local project documents
+*.doc
+*.docx
+*.pdf
+*.png
+*.jpg
+*.jpeg
+
+# Python and editor files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+dist/
+build/
+.eggs/
+.venv/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+nul
+*.tmp
+*.temp
+.cache/
+.pytest_cache/
